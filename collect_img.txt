@@ -1,0 +1,61 @@
+import os
+import cv2
+
+DATA_DIR = './data'
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
+number_of_classes = 4  # Number of alphabet classes
+dataset_size = 100  # Number of images to collect for each class
+
+cap = cv2.VideoCapture(0)  # Assuming camera index 0 (default webcam)
+
+for j in range(number_of_classes):
+    class_dir = os.path.join(DATA_DIR, f'class_{j}')
+    if not os.path.exists(class_dir):
+        os.makedirs(class_dir)
+
+    print(f'Collecting data for class_{j}')
+
+    # Display a message to prepare the user
+    print('Ready? Press "Q" to start collecting!')
+    capture_started = False  # Flag to indicate if capture should start
+
+    counter = 0
+    while counter < dataset_size:
+        ret, frame = cap.read()
+        if not ret:
+            print('Error: Failed to capture frame.')
+            break
+
+        if not capture_started:
+            # Display the initial message and check for 'Q' keypress to start capturing
+            cv2.putText(frame, 'Ready? Press "Q" to start collecting!', (50, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+        else:
+            # Display current class and image number during capture
+            cv2.putText(frame, f'Class_{j} - Image_{counter + 1}', (50, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+
+            # Save the frame to the appropriate class directory
+            img_filename = os.path.join(class_dir, f'image_{counter + 1}.jpg')
+            cv2.imwrite(img_filename, frame)
+
+            counter += 1  # Increment counter after saving the image
+
+        cv2.imshow('frame', frame)
+
+        key = cv2.waitKey(25)
+        if key == ord('q'):
+            capture_started = not capture_started  # Toggle capture flag on 'Q' key press
+            if capture_started:
+                print(f'Start capturing for class_{j}')
+            else:
+                print(f'Stop capturing for class_{j}')
+                counter = dataset_size  # Force exit the loop when 'Q' is pressed to stop
+
+    # Reset capture flag for the next class
+    capture_started = False
+
+cap.release()
+cv2.destroyAllWindows()
